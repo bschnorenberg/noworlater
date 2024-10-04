@@ -1,7 +1,9 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from datetime import datetime
+import io
 
 # Loan calculation functions
 def calculate_monthly_payment(principal, annual_rate, years):
@@ -61,17 +63,31 @@ original_cumulative_cost = [cumulative_cost(original_monthly_payment, 0, m) for 
 refi_1_cumulative_cost = [cumulative_cost(refi_1_monthly_payment, refi_1_closing_costs, max(0, m - months_paid_refi_1)) + cumulative_cost(original_monthly_payment, 0, min(m, months_paid_refi_1)) for m in months]
 refi_2_cumulative_cost = [cumulative_cost(refi_2_monthly_payment, refi_2_closing_costs, max(0, m - months_paid_refi_2)) + cumulative_cost(original_monthly_payment, 0, min(m, months_paid_refi_2)) for m in months]
 
-# Plotting the results
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.plot(months, original_cumulative_cost, label="Original Loan", linestyle='--', color='orange')
-ax.plot(months, refi_1_cumulative_cost, label="Refi Option 1", color='red')
-ax.plot(months, refi_2_cumulative_cost, label="Refi Option 2", color='green')
+# Interactive Plot with Plotly
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=months, y=original_cumulative_cost, mode='lines', name='Original Loan', line=dict(color='orange', dash='dash')))
+fig.add_trace(go.Scatter(x=months, y=refi_1_cumulative_cost, mode='lines', name='Refi Option 1', line=dict(color='red')))
+fig.add_trace(go.Scatter(x=months, y=refi_2_cumulative_cost, mode='lines', name='Refi Option 2', line=dict(color='green')))
 
-ax.set_xlim(0, 120)  # Focus on the first 10 years
-ax.set_xlabel("Months Since Start")
-ax.set_ylabel("Cumulative Cost (USD)")
-ax.set_title("Cumulative Cost Comparison of Refinance Scenarios")
-ax.legend()
-ax.grid(True)
+fig.update_layout(
+    title="Cumulative Cost Comparison of Refinance Scenarios",
+    xaxis_title="Months Since Start",
+    yaxis_title="Cumulative Cost (USD)",
+    xaxis=dict(rangeslider=dict(visible=True)),
+    yaxis=dict(automargin=True),
+    legend=dict(x=0, y=1),
+    template="plotly_white"
+)
 
-st.pyplot(fig)
+# Display the interactive plot
+st.plotly_chart(fig, use_container_width=True)
+
+# Add an option to download the plot
+buffer = io.BytesIO()
+fig.write_image(buffer, format='png')
+st.download_button(
+    label="Download Plot as PNG",
+    data=buffer,
+    file_name="cumulative_cost_comparison.png",
+    mime="image/png"
+)
