@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from datetime import datetime
 import io
 
@@ -63,8 +64,8 @@ original_cumulative_cost = [cumulative_cost(original_monthly_payment, 0, m) for 
 refi_1_cumulative_cost = [cumulative_cost(refi_1_monthly_payment, refi_1_closing_costs, max(0, m - months_paid_refi_1)) + cumulative_cost(original_monthly_payment, 0, min(m, months_paid_refi_1)) for m in months]
 refi_2_cumulative_cost = [cumulative_cost(refi_2_monthly_payment, refi_2_closing_costs, max(0, m - months_paid_refi_2)) + cumulative_cost(original_monthly_payment, 0, min(m, months_paid_refi_2)) for m in months]
 
-# Interactive Plot with Plotly
-fig = go.Figure()
+# Interactive Plot with Plotly (Enhanced Zooming)
+fig = make_subplots(rows=1, cols=1)
 fig.add_trace(go.Scatter(x=months, y=original_cumulative_cost, mode='lines', name='Original Loan', line=dict(color='orange', dash='dash')))
 fig.add_trace(go.Scatter(x=months, y=refi_1_cumulative_cost, mode='lines', name='Refi Option 1', line=dict(color='red')))
 fig.add_trace(go.Scatter(x=months, y=refi_2_cumulative_cost, mode='lines', name='Refi Option 2', line=dict(color='green')))
@@ -73,10 +74,11 @@ fig.update_layout(
     title="Cumulative Cost Comparison of Refinance Scenarios",
     xaxis_title="Months Since Start",
     yaxis_title="Cumulative Cost (USD)",
-    xaxis=dict(rangeslider=dict(visible=True)),
-    yaxis=dict(automargin=True),
+    xaxis=dict(rangeslider=dict(visible=True), fixedrange=False),
+    yaxis=dict(automargin=True, fixedrange=False),
     legend=dict(x=0, y=1),
-    template="plotly_white"
+    template="plotly_white",
+    dragmode='zoom',  # Enable box zoom for easier zooming on specific areas
 )
 
 # Display the interactive plot
